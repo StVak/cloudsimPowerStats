@@ -21,11 +21,13 @@ import org.cloudbus.cloudsim.power.PowerHost;
 
 import demo.Constant;
 import demo.extras.PowerHostExtra;
+import demo.files.PowerMonitor;
 
 public class ExportHtml {
 
 	public static void printResults( String simParAttr[],
 			List<PowerMonitor> monitors) throws IOException {
+		exportHostStats(monitors);
 		String monitorGraphs = "";
 		String graphMonitor = "";		
 		String menu = "<li><a href='./exports/combined.html'>Combined</a></li>";
@@ -496,6 +498,74 @@ Log.disable();
 		}
 		graphMonitor[1] += powerUtilHtml;
 		return graphMonitor;
+	}
+	
+	private static void exportHostStats(List<PowerMonitor> monitors) throws IOException{
+		for (PowerMonitor monitor :monitors ) {
+			boolean dir = (new File("output/graphs/"+monitor.getName())).mkdirs();	
+			String time="";
+			String history="";
+			String historyPower="";
+
+			for (Host hosta:  monitor.getHostList( )){
+				PowerHostExtra host=(PowerHostExtra) hosta;
+				historyPower="";
+				history="";
+				time="";				
+				for (HostStateHistoryEntry entry : host.getStateHistory() ){
+					time+= entry.getTime() + System.getProperty("line.separator");
+					history+= (entry.getAllocatedMips()*100/host.getTotalMips())+ System.getProperty("line.separator");
+					historyPower+= host.getPowerModel().getPower(entry.getAllocatedMips()/host.getTotalMips())+ System.getProperty("line.separator");
+				}
+				
+				
+				
+				
+				File yourFile = new File(
+						"output/graphs/"+monitor.getName() +"/"+ host.getId() + "Util.txt");
+				File yourFileT = new File(
+						"output/graphs/"+monitor.getName()  +"/"+ host.getId() + "Power.txt");
+				if (!yourFileT.exists()) {
+					yourFileT.createNewFile();}
+					try {
+
+						PrintStream out = new PrintStream(new FileOutputStream(
+								"output/graphs/"+monitor.getName() +"/"+ host.getId() + "Util.txt"));
+						out.println(history);
+						out.close();
+						
+						 out = new PrintStream(new FileOutputStream(
+								"output/graphs/"+monitor.getName() +"/"+ host.getId() + "Power.txt"));
+						out.println(historyPower);
+						out.close();			
+
+					} catch (FileNotFoundException e) {
+						e.printStackTrace();
+					}
+				
+				
+				
+				
+			}
+			File timeFile = new File(
+					"output/graphs/"+monitor.getName()  +"/_Times.txt");
+			if (!timeFile.exists()) {
+				timeFile.createNewFile();}
+				try {
+
+					PrintStream out = new PrintStream(new FileOutputStream(
+							"output/graphs/"+monitor.getName()  +"/_Times.txt"));
+					out.println(time);
+					out.close();					
+
+				} catch (FileNotFoundException e) {
+					e.printStackTrace();
+				}
+			
+			
+			
+		}	
+		
 	}
 
 }
